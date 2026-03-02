@@ -9,7 +9,7 @@ const authMiddleware = require('../middleware/auth');
 router.get('/public', async (req, res) => {
     try {
         const items = await QueueItem.find({
-            status: { $in: ['approved', 'in_progress', 'done'] }
+            status: { $in: ['approved', 'waiting_parts', 'in_progress', 'done'] }
         })
             .sort({ position: 1, createdAt: 1 })
             .select('projectName boardType status position createdAt');
@@ -58,7 +58,7 @@ router.post('/', async (req, res) => {
 router.get('/', authMiddleware, async (req, res) => {
     try {
         const items = await QueueItem.find({
-            status: { $in: ['approved', 'in_progress', 'done'] }
+            status: { $in: ['approved', 'waiting_parts', 'in_progress', 'done'] }
         }).sort({ position: 1, createdAt: 1 });
         res.json(items);
     } catch (err) {
