@@ -325,6 +325,12 @@ select option {
   border-color: #3b82f625;
 }
 
+.b-warning {
+  background: #f59e0b15;
+  color: var(--orange);
+  border-color: #f59e0b25;
+}
+
 .b-progress {
   background: #6366f115;
   color: var(--purple);

@@ -27,6 +27,27 @@
 
     <div class="wrap-lg" style="padding-top:20px;padding-bottom:40px">
 
+        <!-- ANNOUNCEMENT -->
+        <div class="card" style="margin-bottom:16px;border-color:var(--border-2)">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <i data-lucide="megaphone" width="15" height="15" style="color:var(--orange);flex-shrink:0"></i>
+                <input id="annInput" type="text" placeholder="พิมพ์ประกาศที่ต้องการให้ผู้จองคิวเห็น"
+                    style="flex:1;min-width:160px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;color:var(--text);font-family:inherit;font-size:13px;outline:none;" />
+                <button class="btn btn-warning btn-sm" onclick="postAnnouncement()">
+                    <i data-lucide="send" width="12" height="12"></i> ประกาศ
+                </button>
+                <button class="btn btn-ghost btn-sm" onclick="clearAnnouncement()" id="annClearBtn"
+                    style="display:none">
+                    <i data-lucide="x" width="12" height="12"></i> ลบประกาศ
+                </button>
+            </div>
+            <div id="annPreview"
+                style="display:none;margin-top:8px;padding:8px 10px;background:var(--bg);border-radius:var(--radius);font-size:12px;color:var(--orange);border:1px solid #f59e0b20">
+                <i data-lucide="info" width="11" height="11"></i>
+                <span id="annPreviewText"></span>
+            </div>
+        </div>
+
         <!-- STATS -->
         <div class="stats">
             <div class="stat">
@@ -91,7 +112,7 @@
             </div>
             <div id="qHint" class="hidden"
                 style="font-size:11px;color:var(--text-3);margin-bottom:10px;display:flex;align-items:center;gap:4px">
-                <i data-lucide="grip-vertical" width="11" height="11"></i> ลากเพื่อเรียงลำดับ
+                <i data-lucide="info" width="11" height="11"></i> ใช้ปุ่ม ↑↓ เพื่อเรียงลำดับ หรือลากได้เหมือนกัน
             </div>
             <div id="qList"></div>
         </div>
@@ -346,7 +367,14 @@
                 list.innerHTML = active.map((item, i) => `
       <div class="q-item" draggable="true" data-id="${item._id}" id="qi-${item._id}">
         <div class="q-top">
-          <span class="drag-handle"><i data-lucide="grip-vertical" width="14" height="14"></i></span>
+          <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">
+            <button class="btn btn-ghost btn-sm" style="padding:2px 5px;" onclick="moveItem('${item._id}',-1)" title="เลื่อนขึ้น">
+              <i data-lucide="chevron-up" width="13" height="13"></i>
+            </button>
+            <button class="btn btn-ghost btn-sm" style="padding:2px 5px;" onclick="moveItem('${item._id}',1)" title="เลื่อนลง">
+              <i data-lucide="chevron-down" width="13" height="13"></i>
+            </button>
+          </div>
           <div class="q-num">${i + 1}</div>
           <div style="flex:1;min-width:0">
             <div class="q-name">${esc(item.projectName)}</div>
@@ -360,7 +388,15 @@
               <i data-lucide="eye" width="12" height="12"></i>
             </button>
             ${item.status === 'approved' ? `
-            <button class="btn btn-warning btn-sm" onclick="setStatus('${item._id}','in_progress')">
+            <button class="btn btn-warning btn-sm" onclick="setStatus('${item._id}','waiting_parts')">
+              <i data-lucide="package" width="12" height="12"></i> รออุปกรณ์
+            </button>` : ''}
+            ${item.status === 'in_progress' ? `
+            <button class="btn btn-warning btn-sm" onclick="setStatus('${item._id}','waiting_parts')">
+              <i data-lucide="package" width="12" height="12"></i> รออุปกรณ์
+            </button>` : ''}
+            ${item.status === 'approved' || item.status === 'waiting_parts' ? `
+            <button class="btn btn-primary btn-sm" onclick="setStatus('${item._id}','in_progress')">
               <i data-lucide="play" width="12" height="12"></i> เริ่ม
             </button>` : ''}
             ${item.status === 'in_progress' ? `
@@ -394,8 +430,18 @@
             try {
                 const r = await fetch(`/api/queue/${id}/status`, { method: 'PATCH', headers: auth(), body: JSON.stringify({ status }) });
                 if (!r.ok) throw new Error();
-                toast(status === 'in_progress' ? 'เริ่มทำงานแล้ว' : 'ทำเสร็จแล้ว');
+                const labels = { waiting_parts: 'ตั้งสถานะเป็นรออุปกรณ์', in_progress: 'เริ่มทำงานแล้ว', done: 'ทำเสร็จแล้ว' };
+                toast(labels[status] || 'อัปเดตแล้ว');
                 loadQueue(); loadStats();
+            } catch { toast('เกิดข้อผิดพลาด', false); }
+        }
+
+        async function revertDone(id, status) {
+            try {
+                const r = await fetch(`/api/queue/${id}/status`, { method: 'PATCH', headers: auth(), body: JSON.stringify({ status }) });
+                if (!r.ok) throw new Error();
+                toast('ย้ายกลับเข้าคิวแล้ว');
+                loadDone(); loadQueue(); loadStats();
             } catch { toast('เกิดข้อผิดพลาด', false); }
         }
 
@@ -424,7 +470,7 @@
                 if (!done.length) { empty.classList.remove('hidden'); lucide.createIcons(); return; }
 
                 list.innerHTML = done.map(item => `
-      <div class="q-item" style="opacity:0.7">
+      <div class="q-item" style="opacity:0.8">
         <div class="q-top">
           <div style="flex:1;min-width:0">
             <div class="q-name">${esc(item.projectName)}</div>
@@ -434,9 +480,17 @@
               <span><i data-lucide="clock" width="11" height="11"></i>${relTime(item.updatedAt)}</span>
             </div>
           </div>
-          <button class="btn btn-danger btn-sm" onclick="del('${item._id}')">
-            <i data-lucide="trash-2" width="12" height="12"></i>
-          </button>
+          <div class="q-actions">
+            <button class="btn btn-warning btn-sm" onclick="revertDone('${item._id}','waiting_parts')">
+              <i data-lucide="package" width="12" height="12"></i> รออุปกรณ์
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="revertDone('${item._id}','in_progress')">
+              <i data-lucide="rotate-ccw" width="12" height="12"></i> กลับทำ
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="del('${item._id}')">
+              <i data-lucide="trash-2" width="12" height="12"></i>
+            </button>
+          </div>
         </div>
       </div>
     `).join('');
@@ -477,6 +531,22 @@
             try {
                 await fetch('/api/queue/reorder', { method: 'PATCH', headers: auth(), body: JSON.stringify({ order }) });
             } catch { }
+        }
+
+        function moveItem(id, dir) {
+            const list = document.getElementById('qList');
+            const el = document.getElementById(`qi-${id}`);
+            if (!el) return;
+            if (dir === -1 && el.previousElementSibling) {
+                list.insertBefore(el, el.previousElementSibling);
+            } else if (dir === 1 && el.nextElementSibling) {
+                list.insertBefore(el.nextElementSibling, el);
+            }
+            [...list.children].forEach((c, i) => {
+                const n = c.querySelector('.q-num');
+                if (n) n.textContent = i + 1;
+            });
+            saveOrder();
         }
 
         // ── ADD FORM ────────────────────────────────────────
@@ -540,10 +610,16 @@
         function statusBadge(s) {
             const m = {
                 approved: 'b-approved',
+                waiting_parts: 'b-warning',
                 in_progress: 'b-progress',
                 done: 'b-done',
             };
-            const labels = { approved: 'รอดำเนินการ', in_progress: 'กำลังทำ', done: 'เสร็จ' };
+            const labels = {
+                approved: 'รอดำเนินการ',
+                waiting_parts: 'รออุปกรณ์',
+                in_progress: 'กำลังทำ',
+                done: 'เสร็จ',
+            };
             return `<span class="badge ${m[s] || 'b-pending'}">${labels[s] || s}</span>`;
         }
         function relTime(d) {
@@ -556,9 +632,55 @@
             return `${Math.floor(h / 24)}วัน ที่แล้ว`;
         }
 
+        // ── ANNOUNCEMENT ─────────────────────────────────────
+        async function loadAnnouncement() {
+            try {
+                const r = await fetch('/api/announcement');
+                const d = await r.json();
+                const preview = document.getElementById('annPreview');
+                const previewText = document.getElementById('annPreviewText');
+                const clearBtn = document.getElementById('annClearBtn');
+                const input = document.getElementById('annInput');
+                if (d && d.text) {
+                    previewText.textContent = d.text;
+                    preview.style.display = 'flex';
+                    clearBtn.style.display = '';
+                    input.value = d.text;
+                } else {
+                    preview.style.display = 'none';
+                    clearBtn.style.display = 'none';
+                    input.value = '';
+                }
+                lucide.createIcons();
+            } catch { }
+        }
+
+        async function postAnnouncement() {
+            const text = document.getElementById('annInput').value.trim();
+            if (!text) return;
+            try {
+                const r = await fetch('/api/announcement', {
+                    method: 'POST', headers: auth(),
+                    body: JSON.stringify({ text })
+                });
+                if (!r.ok) throw new Error();
+                toast('ประกาศแล้ว');
+                loadAnnouncement();
+            } catch { toast('เกิดข้อผิดพลาด', false); }
+        }
+
+        async function clearAnnouncement() {
+            try {
+                await fetch('/api/announcement', { method: 'DELETE', headers: auth() });
+                toast('ลบประกาศแล้ว');
+                loadAnnouncement();
+            } catch { toast('เกิดข้อผิดพลาด', false); }
+        }
+
         // ── INIT ────────────────────────────────────────────
         loadStats();
         loadPending();
+        loadAnnouncement();
         setInterval(loadStats, 30000);
         lucide.createIcons();
     </script>

@@ -22,7 +22,7 @@ const queueItemSchema = new mongoose.Schema({
     notes: { type: String, default: '' },
     status: {
         type: String,
-        enum: ['pending', 'approved', 'rejected', 'in_progress', 'done'],
+        enum: ['pending', 'approved', 'rejected', 'waiting_parts', 'in_progress', 'done'],
         default: 'pending'
     },
     submittedBy: { type: String, default: 'client' }, // 'client' or 'admin'

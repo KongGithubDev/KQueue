@@ -183,7 +183,7 @@ router.patch('/:id/reject', authMiddleware, async (req, res) => {
 router.patch('/:id/status', authMiddleware, async (req, res) => {
     try {
         const { status } = req.body;
-        const validStatuses = ['approved', 'in_progress', 'done'];
+        const validStatuses = ['approved', 'waiting_parts', 'in_progress', 'done'];
         if (!validStatuses.includes(status)) {
             return res.status(400).json({ message: 'Invalid status.' });
         }

@@ -24,6 +24,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // API Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/queue', require('./routes/queue'));
+app.use('/api/announcement', require('./routes/announcement'));
 
 // Fallback to index.html for SPA-like routing
 app.get('/admin', (req, res) => {

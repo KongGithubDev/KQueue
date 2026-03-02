@@ -21,6 +21,13 @@
         </a>
     </nav>
 
+    <!-- ANNOUNCEMENT BANNER -->
+    <div id="annBanner"
+        style="display:none;background:#f59e0b18;border-bottom:1px solid #f59e0b30;padding:9px 20px;font-size:13px;color:var(--orange);display:none;align-items:center;gap:8px">
+        <i data-lucide="megaphone" width="13" height="13"></i>
+        <span id="annBannerText"></span>
+    </div>
+
     <div class="wrap">
         <div class="hero">
             <h1>จองคิวทำโครงงาน</h1>
@@ -269,6 +276,7 @@
         function statusBadge(s) {
             const m = {
                 approved: ['b-approved', 'รอดำเนินการ'],
+                waiting_parts: ['b-warning', 'รออุปกรณ์'],
                 in_progress: ['b-progress', 'กำลังทำ'],
                 done: ['b-done', 'เสร็จแล้ว'],
             };
@@ -280,7 +288,24 @@
             return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
 
+        async function loadAnnouncement() {
+            try {
+                const r = await fetch('/api/announcement');
+                const d = await r.json();
+                const banner = document.getElementById('annBanner');
+                const txt = document.getElementById('annBannerText');
+                if (d && d.text) {
+                    txt.textContent = d.text;
+                    banner.style.display = 'flex';
+                    lucide.createIcons();
+                } else {
+                    banner.style.display = 'none';
+                }
+            } catch { }
+        }
+
         loadPublicQueue();
+        loadAnnouncement();
         lucide.createIcons();
     </script>
 </body>
