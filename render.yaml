@@ -6,12 +6,12 @@ services:
     startCommand: node server.js
     envVars:
       - key: MONGODB_URI
-        value: mongodb+srv://kongwatcharapongemail_db_user:KongPassword@kongdb.7f3tqb3.mongodb.net/kqueue
+        value: mongodb+srv://-/kqueue
       - key: JWT_SECRET
         generateValue: true
       - key: ADMIN_PASSWORD
-        value: admin123
+        value: -
       - key: ALLOWED_ORIGIN
-        value: https://kqueue.kongwatcharapong.in.th
+        value: -
       - key: NODE_ENV
         value: production
