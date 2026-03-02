@@ -4,55 +4,68 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin Login — KQueue</title>
+    <title>KQueue — Admin Login</title>
     <link rel="stylesheet" href="/style.css" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 
 <body>
-    <div class="login-wrapper">
-        <div class="login-card">
-            <div class="login-logo">
-                <div class="logo-icon">⚡</div>
-                <h2>KQueue</h2>
-                <p style="font-size:0.85rem;margin-top:0.3rem">Admin เท่านั้น</p>
-            </div>
-
-            <form id="loginForm" novalidate>
-                <div class="form-group">
-                    <label class="form-label" for="password">รหัสผ่าน</label>
-                    <input id="password" class="form-control" type="password" placeholder="••••••••" autofocus />
+    <div class="login-wrap">
+        <div class="login-box">
+            <div class="card">
+                <div style="text-align:center;margin-bottom:24px">
+                    <div
+                        style="width:40px;height:40px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+                        <i data-lucide="zap" width="18" height="18" style="color:#fff"></i>
+                    </div>
+                    <div style="font-size:16px;font-weight:700">KQueue</div>
+                    <div style="font-size:12px;color:var(--text-2);margin-top:2px">Admin เท่านั้น</div>
                 </div>
-                <div id="loginError" class="hidden"
-                    style="color:var(--accent-red);font-size:0.85rem;margin-bottom:0.8rem;text-align:center"></div>
-                <button type="submit" class="btn btn-primary btn-full btn-lg" id="loginBtn">
-                    <span id="loginText">เข้าสู่ระบบ</span>
-                    <span id="loginSpinner" class="spinner hidden"></span>
-                </button>
-            </form>
 
-            <div style="text-align:center;margin-top:1.25rem">
-                <a href="/" class="navbar-link" style="font-size:0.82rem">← กลับหน้าหลัก</a>
+                <form id="loginForm" novalidate>
+                    <div class="fg">
+                        <label>รหัสผ่าน</label>
+                        <input id="password" type="password" placeholder="••••••••" autofocus />
+                    </div>
+                    <div id="loginErr" class="err-msg hidden">
+                        <i data-lucide="alert-circle" width="13" height="13"></i>
+                        <span id="loginErrText"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full" id="loginBtn">
+                        <i data-lucide="log-in" width="14" height="14" id="loginIcon"></i>
+                        <span id="loginText">เข้าสู่ระบบ</span>
+                        <span id="loginSpinner" class="spinner hidden"></span>
+                    </button>
+                </form>
+
+                <div style="text-align:center;margin-top:16px">
+                    <a href="/" class="topbar-link" style="font-size:12px">
+                        <i data-lucide="arrow-left" width="12" height="12"></i> กลับหน้าหลัก
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Redirect if already logged in
         if (localStorage.getItem('adminToken')) {
             window.location.href = '/admin';
         }
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const errorEl = document.getElementById('loginError');
-            const loginBtn = document.getElementById('loginBtn');
-            const loginText = document.getElementById('loginText');
-            const loginSpinner = document.getElementById('loginSpinner');
+            const errEl = document.getElementById('loginErr');
+            const errTxt = document.getElementById('loginErrText');
+            const btn = document.getElementById('loginBtn');
+            const txt = document.getElementById('loginText');
+            const icon = document.getElementById('loginIcon');
+            const spinner = document.getElementById('loginSpinner');
 
-            errorEl.classList.add('hidden');
-            loginBtn.disabled = true;
-            loginText.textContent = 'กำลังเข้าสู่ระบบ...';
-            loginSpinner.classList.remove('hidden');
+            errEl.classList.add('hidden');
+            btn.disabled = true;
+            txt.textContent = 'กำลังเข้าสู่ระบบ...';
+            icon.classList.add('hidden');
+            spinner.classList.remove('hidden');
 
             try {
                 const res = await fetch('/api/auth/login', {
@@ -65,13 +78,17 @@
                 localStorage.setItem('adminToken', data.token);
                 window.location.href = '/admin';
             } catch (err) {
-                errorEl.textContent = '❌ ' + err.message;
-                errorEl.classList.remove('hidden');
-                loginBtn.disabled = false;
-                loginText.textContent = 'เข้าสู่ระบบ';
-                loginSpinner.classList.add('hidden');
+                errTxt.textContent = err.message;
+                errEl.classList.remove('hidden');
+                btn.disabled = false;
+                txt.textContent = 'เข้าสู่ระบบ';
+                icon.classList.remove('hidden');
+                spinner.classList.add('hidden');
+                lucide.createIcons();
             }
         });
+
+        lucide.createIcons();
     </script>
 </body>
 

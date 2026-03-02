@@ -6,263 +6,128 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>KQueue — Admin</title>
     <link rel="stylesheet" href="/style.css" />
-    <style>
-        .admin-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1.1rem 1.5rem;
-            background: rgba(10, 11, 15, 0.85);
-            backdrop-filter: blur(16px);
-            border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .admin-nav {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-        }
-
-        .admin-content {
-            max-width: 960px;
-            margin: 0 auto;
-            padding: 2rem 1.5rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .section-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0;
-        }
-
-        .pending-item,
-        .queue-item-admin {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            padding: 1.1rem 1.25rem;
-            margin-bottom: 0.75rem;
-            transition: var(--transition);
-            animation: slideIn 0.3s ease;
-        }
-
-        .pending-item:hover,
-        .queue-item-admin:hover {
-            border-color: rgba(255, 255, 255, 0.1);
-            background: var(--bg-card-hover);
-        }
-
-        .item-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.8rem;
-            flex-wrap: wrap;
-        }
-
-        .item-top-left {
-            display: flex;
-            align-items: center;
-            gap: 0.7rem;
-            flex: 1;
-            min-width: 0;
-        }
-
-        .item-title {
-            font-weight: 600;
-            font-size: 0.95rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .item-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.35rem;
-            margin-top: 0.45rem;
-            font-size: 0.78rem;
-            color: var(--text-muted);
-        }
-
-        .chip {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 0.15rem 0.55rem;
-        }
-
-        .detail-box {
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 1rem;
-            font-size: 0.85rem;
-            margin-top: 0.75rem;
-            display: none;
-        }
-
-        .detail-box.open {
-            display: block;
-            animation: slideIn 0.2s ease;
-        }
-
-        .detail-row {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 0.4rem;
-        }
-
-        .detail-lbl {
-            color: var(--text-muted);
-            min-width: 120px;
-            flex-shrink: 0;
-        }
-
-        .detail-val {
-            color: var(--text-primary);
-            word-break: break-word;
-        }
-
-        .drag-handle {
-            cursor: grab;
-            color: var(--text-muted);
-            user-select: none;
-            font-size: 1.1rem;
-            padding: 0 0.25rem;
-            flex-shrink: 0;
-        }
-
-        .drag-handle:active {
-            cursor: grabbing;
-        }
-
-        .queue-item-admin.dragging {
-            opacity: 0.4;
-            border: 2px dashed var(--accent-purple);
-        }
-
-        .queue-item-admin.drag-over {
-            border-color: var(--accent-cyan);
-            background: rgba(0, 229, 255, 0.03);
-        }
-
-        #addForm .form-row {
-            grid-template-columns: 1fr 1fr;
-        }
-    </style>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 
 <body>
 
-    <!-- TOP BAR -->
-    <header class="admin-header">
-        <div class="navbar-brand">
-            <div class="brand-icon">⚡</div>
-            <span>KQueue</span>
+    <nav class="topbar">
+        <a class="logo" href="/">
+            <div class="logo-box"><i data-lucide="zap" width="14" height="14"></i></div>
+            KQueue
+        </a>
+        <div style="display:flex;gap:8px;align-items:center">
+            <a href="/" class="btn btn-ghost btn-sm" target="_blank">
+                <i data-lucide="external-link" width="12" height="12"></i> หน้าสาธารณะ
+            </a>
+            <button class="btn btn-danger btn-sm" onclick="logout()">
+                <i data-lucide="log-out" width="12" height="12"></i> ออก
+            </button>
         </div>
-        <div class="admin-nav">
-            <a href="/" class="btn btn-ghost btn-sm" target="_blank">🌐 หน้าสาธารณะ</a>
-            <button class="btn btn-danger btn-sm" onclick="logout()">ออกจากระบบ</button>
-        </div>
-    </header>
+    </nav>
 
-    <div class="admin-content">
+    <div class="wrap-lg" style="padding-top:20px;padding-bottom:40px">
 
         <!-- STATS -->
-        <div class="stats-bar" id="statsBar">
-            <div class="stat-card">
-                <div class="stat-number gradient-text" id="statPending">—</div>
-                <div class="stat-label">⏳ รออนุมัติ</div>
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-n" id="sP" style="color:var(--orange)">—</div>
+                <div class="stat-l">รออนุมัติ</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number" style="color:var(--accent-blue)" id="statApproved">—</div>
-                <div class="stat-label">📋 ในคิว</div>
+            <div class="stat">
+                <div class="stat-n" id="sA" style="color:var(--blue)">—</div>
+                <div class="stat-l">ในคิว</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number" style="color:var(--accent-purple)" id="statInProgress">—</div>
-                <div class="stat-label">🔧 กำลังทำ</div>
+            <div class="stat">
+                <div class="stat-n" id="sI" style="color:var(--purple)">—</div>
+                <div class="stat-l">กำลังทำ</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number" style="color:var(--accent-green)" id="statDone">—</div>
-                <div class="stat-label">✅ เสร็จแล้ว</div>
+            <div class="stat">
+                <div class="stat-n" id="sD" style="color:var(--green)">—</div>
+                <div class="stat-l">เสร็จแล้ว</div>
             </div>
         </div>
 
         <!-- TABS -->
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('pending',this)" id="tabPending">
-                🔔 รออนุมัติ <span class="tab-badge" id="pendingBadge" style="display:none">0</span>
+            <button class="tab active" onclick="switchTab('pending',this)" id="tabPending">
+                <i data-lucide="bell" width="13" height="13"></i>
+                รออนุมัติ
+                <span class="tab-count" id="pendingCount" style="display:none">0</span>
             </button>
-            <button class="tab-btn" onclick="switchTab('queue',this)">📋 คิวงาน</button>
-            <button class="tab-btn" onclick="switchTab('done',this)">✅ เสร็จแล้ว</button>
-            <button class="tab-btn" onclick="switchTab('add',this)">➕ เพิ่มเอง</button>
+            <button class="tab" onclick="switchTab('queue',this)">
+                <i data-lucide="list" width="13" height="13"></i>
+                คิวงาน
+            </button>
+            <button class="tab" onclick="switchTab('done',this)">
+                <i data-lucide="check-circle" width="13" height="13"></i>
+                เสร็จแล้ว
+            </button>
+            <button class="tab" onclick="switchTab('add',this)">
+                <i data-lucide="plus" width="13" height="13"></i>
+                เพิ่มเอง
+            </button>
         </div>
 
         <!-- TAB: PENDING -->
         <div id="tab-pending">
-            <div id="pendingLoading" class="flex-center" style="padding:2.5rem">
-                <div class="spinner" style="border-color:rgba(124,77,255,0.2);border-top-color:var(--accent-purple)">
-                </div>
+            <div id="pLoad" style="padding:32px;text-align:center">
+                <div class="spinner" style="border-color:#6366f115;border-top-color:var(--accent);margin:0 auto"></div>
             </div>
-            <div id="pendingEmpty" class="empty-state hidden">
-                <div class="empty-icon">🎉</div>
+            <div id="pEmpty" class="empty hidden">
+                <i data-lucide="inbox" width="28" height="28"></i>
                 <p>ว่างดีเลย ไม่มีคำขอใหม่</p>
             </div>
-            <div id="pendingList" class="section-list"></div>
+            <div id="pList"></div>
         </div>
 
         <!-- TAB: QUEUE -->
         <div id="tab-queue" class="hidden">
-            <div id="queueLoading" class="flex-center" style="padding:2.5rem">
-                <div class="spinner" style="border-color:rgba(124,77,255,0.2);border-top-color:var(--accent-purple)">
-                </div>
+            <div id="qLoad" style="padding:32px;text-align:center">
+                <div class="spinner" style="border-color:#6366f115;border-top-color:var(--accent);margin:0 auto"></div>
             </div>
-            <div id="queueEmpty" class="empty-state hidden">
-                <div class="empty-icon">📭</div>
+            <div id="qEmpty" class="empty hidden">
+                <i data-lucide="layers" width="28" height="28"></i>
                 <p>คิวว่างอยู่</p>
             </div>
-            <div id="queueList" class="section-list"></div>
-            <div id="queueHint" class="hidden"
-                style="text-align:center;color:var(--text-muted);font-size:0.8rem;margin-top:0.5rem">💡
-                ลากเพื่อเรียงลำดับใหม่</div>
+            <div id="qHint" class="hidden"
+                style="font-size:11px;color:var(--text-3);margin-bottom:10px;display:flex;align-items:center;gap:4px">
+                <i data-lucide="grip-vertical" width="11" height="11"></i> ลากเพื่อเรียงลำดับ
+            </div>
+            <div id="qList"></div>
         </div>
 
         <!-- TAB: DONE -->
         <div id="tab-done" class="hidden">
-            <div id="doneLoading" class="flex-center" style="padding:2.5rem">
-                <div class="spinner" style="border-color:rgba(124,77,255,0.2);border-top-color:var(--accent-purple)">
-                </div>
+            <div id="dLoad" style="padding:32px;text-align:center">
+                <div class="spinner" style="border-color:#6366f115;border-top-color:var(--accent);margin:0 auto"></div>
             </div>
-            <div id="doneEmpty" class="empty-state hidden">
-                <div class="empty-icon">📭</div>
+            <div id="dEmpty" class="empty hidden">
+                <i data-lucide="archive" width="28" height="28"></i>
                 <p>ยังไม่มีงานเสร็จ</p>
             </div>
-            <div id="doneList" class="section-list"></div>
+            <div id="dList"></div>
         </div>
 
         <!-- TAB: ADD -->
         <div id="tab-add" class="hidden">
             <div class="card">
-                <div class="card-header">
-                    <div class="card-title">➕ เพิ่มงานเอง</div><small style="color:var(--text-muted)">ข้ามการอนุมัติ
-                        เข้าคิวทันที</small>
+                <div class="card-head">
+                    <div class="card-title">
+                        <i data-lucide="plus-circle" width="15" height="15"></i>
+                        เพิ่มงานเอง
+                    </div>
+                    <span style="font-size:11px;color:var(--text-3)">ข้ามการอนุมัติ เข้าคิวทันที</span>
                 </div>
                 <form id="addForm" novalidate>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">ชื่อโครงงาน<span class="required">*</span></label>
-                            <input id="add-projectName" class="form-control" type="text" placeholder="ชื่อโครงงาน"
-                                required />
+                    <div class="row2">
+                        <div class="fg">
+                            <label>ชื่อโครงงาน <span class="req">*</span></label>
+                            <input id="a-name" type="text" required placeholder="ชื่อโครงงาน" />
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">ประเภทบอร์ด</label>
-                            <select id="add-boardType" class="form-control">
+                        <div class="fg">
+                            <label>บอร์ด</label>
+                            <select id="a-board">
                                 <option value="ESP32">ESP32</option>
                                 <option value="ESP8266">ESP8266</option>
                                 <option value="Arduino">Arduino</option>
@@ -271,15 +136,15 @@
                             </select>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">รายละเอียดฟีเจอร์<span class="required">*</span></label>
-                        <textarea id="add-features" class="form-control" rows="3" placeholder="อธิบายฟีเจอร์ที่ต้องการ"
-                            required></textarea>
+                    <div class="fg">
+                        <label>รายละเอียด <span class="req">*</span></label>
+                        <textarea id="a-feat" rows="3" required placeholder="อธิบายงาน"></textarea>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">ช่องทางติดต่อ</label>
-                            <select id="add-contactType" class="form-control">
+                    <div class="row2">
+                        <div class="fg">
+                            <label>ช่องทางติดต่อ</label>
+                            <select id="a-ctype">
+                                <option value="Instagram">Instagram</option>
                                 <option value="Line">Line</option>
                                 <option value="Facebook">Facebook</option>
                                 <option value="Phone">โทรศัพท์</option>
@@ -287,49 +152,49 @@
                                 <option value="Other">อื่นๆ</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">ID / เบอร์ / อีเมล<span class="required">*</span></label>
-                            <input id="add-contact" class="form-control" type="text" placeholder="ช่องทางติดต่อ"
-                                required />
+                        <div class="fg">
+                            <label>ID / เบอร์ <span class="req">*</span></label>
+                            <input id="a-con" type="text" required placeholder="ช่องทางติดต่อ" />
                         </div>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">งบประมาณ</label>
-                            <input id="add-budget" class="form-control" type="text" placeholder="เช่น 300-500 บาท" />
+                    <div class="row2">
+                        <div class="fg">
+                            <label>งบ</label>
+                            <input id="a-budget" type="text" placeholder="เช่น 300-500 บาท" />
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">กำหนดส่ง</label>
-                            <input id="add-deadline" class="form-control" type="date" />
+                        <div class="fg">
+                            <label>กำหนดส่ง</label>
+                            <input id="a-dead" type="date" />
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">หมายเหตุ</label>
-                        <textarea id="add-notes" class="form-control" rows="2"
-                            placeholder="หมายเหตุเพิ่มเติม"></textarea>
+                    <div class="fg">
+                        <label>หมายเหตุ</label>
+                        <textarea id="a-notes" rows="2" placeholder="หมายเหตุ"></textarea>
                     </div>
-                    <div id="addError" class="hidden"
-                        style="color:var(--accent-red);font-size:0.85rem;margin-bottom:0.8rem"></div>
+                    <div id="addErr" class="err-msg hidden">
+                        <i data-lucide="alert-circle" width="13" height="13"></i>
+                        <span id="addErrTxt"></span>
+                    </div>
                     <button type="submit" class="btn btn-primary btn-full" id="addBtn">
-                        <span id="addText">➕ เพิ่มเข้าคิว</span>
-                        <span id="addSpinner" class="spinner hidden"></span>
+                        <i data-lucide="plus" width="14" height="14" id="addIcon"></i>
+                        <span id="addTxt">เพิ่มเข้าคิว</span>
+                        <span id="addSpin" class="spinner hidden"></span>
                     </button>
                 </form>
             </div>
         </div>
 
-    </div>
+    </div><!-- /wrap-lg -->
 
-    <div class="toast-container" id="toastContainer"></div>
+    <div class="toast-wrap" id="toastWrap"></div>
 
     <script>
         const token = localStorage.getItem('adminToken');
-        if (!token) { window.location.href = '/login'; }
+        if (!token) window.location.href = '/login';
 
         let dragSrc = null;
 
-        // ══ AUTH ═══════════════════════════════════════════════
-        function authHeaders() {
+        function auth() {
             return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
         }
         function logout() {
@@ -337,244 +202,255 @@
             window.location.href = '/login';
         }
 
-        // ══ TOAST ══════════════════════════════════════════════
-        function toast(msg, type = 'info') {
-            const t = document.createElement('div');
-            t.className = `toast ${type}`;
-            const icons = { success: '✅', error: '❌', info: 'ℹ️' };
-            t.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${msg}</span>`;
-            document.getElementById('toastContainer').appendChild(t);
-            setTimeout(() => t.remove(), 3500);
+        // ── TOAST ──────────────────────────────────────────
+        function toast(msg, ok = true) {
+            const el = document.createElement('div');
+            el.className = `toast ${ok ? 'ok' : 'err'}`;
+            el.innerHTML = `<i data-lucide="${ok ? 'check' : 'x'}" width="14" height="14"></i><span>${msg}</span>`;
+            document.getElementById('toastWrap').appendChild(el);
+            lucide.createIcons();
+            setTimeout(() => el.remove(), 3000);
         }
 
-        // ══ TABS ═══════════════════════════════════════════════
+        // ── TABS ────────────────────────────────────────────
         function switchTab(tab, btn) {
             document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
             document.getElementById(`tab-${tab}`).classList.remove('hidden');
             btn.classList.add('active');
-
             if (tab === 'pending') loadPending();
             else if (tab === 'queue') loadQueue();
             else if (tab === 'done') loadDone();
         }
 
-        // ══ STATS ══════════════════════════════════════════════
+        // ── STATS ───────────────────────────────────────────
         async function loadStats() {
             try {
-                const res = await fetch('/api/queue/stats', { headers: authHeaders() });
-                if (res.status === 403) { logout(); return; }
-                const d = await res.json();
-                document.getElementById('statPending').textContent = d.pending;
-                document.getElementById('statApproved').textContent = d.approved;
-                document.getElementById('statInProgress').textContent = d.inProgress;
-                document.getElementById('statDone').textContent = d.done;
-                const badge = document.getElementById('pendingBadge');
-                if (d.pending > 0) { badge.textContent = d.pending; badge.style.display = 'inline-flex'; }
-                else badge.style.display = 'none';
+                const r = await fetch('/api/queue/stats', { headers: auth() });
+                if (r.status === 403) { logout(); return; }
+                const d = await r.json();
+                document.getElementById('sP').textContent = d.pending;
+                document.getElementById('sA').textContent = d.approved;
+                document.getElementById('sI').textContent = d.inProgress;
+                document.getElementById('sD').textContent = d.done;
+                const cnt = document.getElementById('pendingCount');
+                if (d.pending > 0) { cnt.textContent = d.pending; cnt.style.display = 'inline-flex'; }
+                else cnt.style.display = 'none';
             } catch { }
         }
 
-        // ══ PENDING ════════════════════════════════════════════
+        // ── PENDING ─────────────────────────────────────────
         async function loadPending() {
-            const loadEl = document.getElementById('pendingLoading');
-            const emptyEl = document.getElementById('pendingEmpty');
-            const listEl = document.getElementById('pendingList');
-            loadEl.classList.remove('hidden'); emptyEl.classList.add('hidden'); listEl.innerHTML = '';
+            const load = document.getElementById('pLoad');
+            const empty = document.getElementById('pEmpty');
+            const list = document.getElementById('pList');
+            load.classList.remove('hidden'); empty.classList.add('hidden'); list.innerHTML = '';
 
             try {
-                const res = await fetch('/api/queue/pending', { headers: authHeaders() });
-                const data = await res.json();
-                loadEl.classList.add('hidden');
-                if (!data.length) { emptyEl.classList.remove('hidden'); return; }
+                const r = await fetch('/api/queue/pending', { headers: auth() });
+                const data = await r.json();
+                load.classList.add('hidden');
+                if (!data.length) { empty.classList.remove('hidden'); lucide.createIcons(); return; }
 
-                listEl.innerHTML = data.map(item => `
-      <div class="pending-item" id="pi-${item._id}">
-        <div class="item-top">
-          <div class="item-top-left">
-            <div>
-              <div class="item-title">📄 ${esc(item.projectName)}</div>
-              <div class="item-chips">
-                <span class="chip">🔧 ${esc(item.boardType)}</span>
-                <span class="chip">${contactIcon(item.contactType)} ${esc(item.contactType)}</span>
-                ${item.budget ? `<span class="chip">💰 ${esc(item.budget)}</span>` : ''}
-                ${item.deadline ? `<span class="chip">📅 ${item.deadline}</span>` : ''}
-                <span class="chip" style="color:var(--text-muted)">🕐 ${relTime(item.createdAt)}</span>
-              </div>
+                list.innerHTML = data.map(item => `
+      <div class="q-item" id="pi-${item._id}">
+        <div class="q-top">
+          <div style="flex:1;min-width:0">
+            <div class="q-name">${esc(item.projectName)}</div>
+            <div class="q-meta">
+              <span><i data-lucide="cpu" width="11" height="11"></i>${esc(item.boardType)}</span>
+              <span><i data-lucide="message-circle" width="11" height="11"></i>${esc(item.contactType)}</span>
+              ${item.budget ? `<span><i data-lucide="banknote" width="11" height="11"></i>${esc(item.budget)}</span>` : ''}
+              ${item.deadline ? `<span><i data-lucide="calendar" width="11" height="11"></i>${item.deadline}</span>` : ''}
+              <span><i data-lucide="clock" width="11" height="11"></i>${relTime(item.createdAt)}</span>
             </div>
           </div>
-          <div style="display:flex;gap:0.4rem;flex-wrap:wrap;align-items:center">
-            <button class="btn btn-ghost btn-sm" onclick="toggleDetail('pdet-${item._id}')">👁 ดูรายละเอียด</button>
-            <button class="btn btn-success btn-sm" onclick="approve('${item._id}')">✅ อนุมัติ</button>
-            <button class="btn btn-danger btn-sm" onclick="reject('${item._id}')">❌ ปฏิเสธ</button>
+          <div class="q-actions">
+            <button class="btn btn-ghost btn-sm" onclick="toggleDet('pd-${item._id}')">
+              <i data-lucide="eye" width="12" height="12"></i>
+            </button>
+            <button class="btn btn-success btn-sm" onclick="approve('${item._id}')">
+              <i data-lucide="check" width="12" height="12"></i> อนุมัติ
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="reject('${item._id}')">
+              <i data-lucide="x" width="12" height="12"></i> ปฏิเสธ
+            </button>
           </div>
         </div>
-        <div class="detail-box" id="pdet-${item._id}">
-          <div class="detail-row"><span class="detail-lbl">ชื่อโครงงาน</span><span class="detail-val">${esc(item.projectName)}</span></div>
-          <div class="detail-row"><span class="detail-lbl">ประเภทบอร์ด</span><span class="detail-val">${esc(item.boardType)}</span></div>
-          <div class="detail-row"><span class="detail-lbl">ฟีเจอร์</span><span class="detail-val" style="white-space:pre-wrap">${esc(item.features)}</span></div>
-          <div class="detail-row"><span class="detail-lbl">ช่องทางติดต่อ</span><span class="detail-val">${esc(item.contactType)}: ${esc(item.contact)}</span></div>
-          ${item.budget ? `<div class="detail-row"><span class="detail-lbl">งบประมาณ</span><span class="detail-val">${esc(item.budget)}</span></div>` : ''}
-          ${item.deadline ? `<div class="detail-row"><span class="detail-lbl">กำหนดส่ง</span><span class="detail-val">${item.deadline}</span></div>` : ''}
-          ${item.notes ? `<div class="detail-row"><span class="detail-lbl">หมายเหตุ</span><span class="detail-val" style="white-space:pre-wrap">${esc(item.notes)}</span></div>` : ''}
+        <div class="q-detail" id="pd-${item._id}">
+          <table>
+            <tr><td>โครงงาน</td><td>${esc(item.projectName)}</td></tr>
+            <tr><td>บอร์ด</td><td>${esc(item.boardType)}</td></tr>
+            <tr><td>รายละเอียด</td><td style="white-space:pre-wrap">${esc(item.features)}</td></tr>
+            <tr><td>ติดต่อ</td><td>${esc(item.contactType)}: ${esc(item.contact)}</td></tr>
+            ${item.budget ? `<tr><td>งบ</td><td>${esc(item.budget)}</td></tr>` : ''}
+            ${item.deadline ? `<tr><td>กำหนดส่ง</td><td>${item.deadline}</td></tr>` : ''}
+            ${item.notes ? `<tr><td>หมายเหตุ</td><td style="white-space:pre-wrap">${esc(item.notes)}</td></tr>` : ''}
+          </table>
         </div>
       </div>
     `).join('');
-            } catch { loadEl.classList.add('hidden'); }
+                lucide.createIcons();
+            } catch { load.classList.add('hidden'); }
         }
 
         async function approve(id) {
             try {
-                const res = await fetch(`/api/queue/${id}/approve`, { method: 'PATCH', headers: authHeaders() });
-                if (!res.ok) throw new Error();
+                const r = await fetch(`/api/queue/${id}/approve`, { method: 'PATCH', headers: auth() });
+                if (!r.ok) throw new Error();
                 document.getElementById(`pi-${id}`)?.remove();
-                toast('อนุมัติแล้ว เพิ่มเข้าคิวสำเร็จ', 'success');
+                toast('อนุมัติแล้ว');
                 loadStats();
-            } catch { toast('เกิดข้อผิดพลาด', 'error'); }
+            } catch { toast('เกิดข้อผิดพลาด', false); }
         }
 
         async function reject(id) {
-            if (!confirm('ยืนยันการปฏิเสธคำขอนี้?')) return;
+            if (!confirm('ปฏิเสธคำขอนี้?')) return;
             try {
-                const res = await fetch(`/api/queue/${id}/reject`, { method: 'PATCH', headers: authHeaders() });
-                if (!res.ok) throw new Error();
+                const r = await fetch(`/api/queue/${id}/reject`, { method: 'PATCH', headers: auth() });
+                if (!r.ok) throw new Error();
                 document.getElementById(`pi-${id}`)?.remove();
-                toast('ปฏิเสธคำขอแล้ว', 'info');
+                toast('ปฏิเสธแล้ว');
                 loadStats();
-            } catch { toast('เกิดข้อผิดพลาด', 'error'); }
+            } catch { toast('เกิดข้อผิดพลาด', false); }
         }
 
-        // ══ QUEUE ══════════════════════════════════════════════
+        // ── QUEUE ───────────────────────────────────────────
         async function loadQueue() {
-            const loadEl = document.getElementById('queueLoading');
-            const emptyEl = document.getElementById('queueEmpty');
-            const listEl = document.getElementById('queueList');
-            const hintEl = document.getElementById('queueHint');
-            loadEl.classList.remove('hidden'); emptyEl.classList.add('hidden');
-            listEl.innerHTML = ''; hintEl.classList.add('hidden');
+            const load = document.getElementById('qLoad');
+            const empty = document.getElementById('qEmpty');
+            const hint = document.getElementById('qHint');
+            const list = document.getElementById('qList');
+            load.classList.remove('hidden'); empty.classList.add('hidden');
+            hint.classList.add('hidden'); list.innerHTML = '';
 
             try {
-                const res = await fetch('/api/queue', { headers: authHeaders() });
-                const data = await res.json();
-                loadEl.classList.add('hidden');
-
+                const r = await fetch('/api/queue', { headers: auth() });
+                const data = await r.json();
+                load.classList.add('hidden');
                 const active = data.filter(d => d.status !== 'done');
-                if (!active.length) { emptyEl.classList.remove('hidden'); return; }
-                hintEl.classList.remove('hidden');
+                if (!active.length) { empty.classList.remove('hidden'); lucide.createIcons(); return; }
+                hint.classList.remove('hidden');
 
-                listEl.innerHTML = active.map((item, i) => `
-      <div class="queue-item-admin" draggable="true" data-id="${item._id}" id="qi-${item._id}">
-        <div class="item-top">
-          <div class="item-top-left">
-            <span class="drag-handle" title="ลากเพื่อเรียง">⠿</span>
-            <div class="pos-badge">${i + 1}</div>
-            <div>
-              <div class="item-title">${esc(item.projectName)}</div>
-              <div class="item-chips">
-                <span class="chip">🔧 ${esc(item.boardType)}</span>
-                ${statusBadge(item.status)}
-                <span class="chip" style="color:var(--text-muted)">🕐 ${relTime(item.createdAt)}</span>
-              </div>
+                list.innerHTML = active.map((item, i) => `
+      <div class="q-item" draggable="true" data-id="${item._id}" id="qi-${item._id}">
+        <div class="q-top">
+          <span class="drag-handle"><i data-lucide="grip-vertical" width="14" height="14"></i></span>
+          <div class="q-num">${i + 1}</div>
+          <div style="flex:1;min-width:0">
+            <div class="q-name">${esc(item.projectName)}</div>
+            <div class="q-meta">
+              <span><i data-lucide="cpu" width="11" height="11"></i>${esc(item.boardType)}</span>
+              ${statusBadge(item.status)}
             </div>
           </div>
-          <div style="display:flex;gap:0.4rem;flex-wrap:wrap;align-items:center">
-            <button class="btn btn-ghost btn-sm" onclick="toggleDetail('qdet-${item._id}')">👁</button>
-            ${item.status === 'approved' ? `<button class="btn btn-warning btn-sm" onclick="updateStatus('${item._id}','in_progress')">▶ เริ่ม</button>` : ''}
-            ${item.status === 'in_progress' ? `<button class="btn btn-success btn-sm" onclick="updateStatus('${item._id}','done')">✓ เสร็จ</button>` : ''}
-            <button class="btn btn-danger btn-sm" onclick="deleteItem('${item._id}')">🗑</button>
+          <div class="q-actions">
+            <button class="btn btn-ghost btn-sm" onclick="toggleDet('qd-${item._id}')">
+              <i data-lucide="eye" width="12" height="12"></i>
+            </button>
+            ${item.status === 'approved' ? `
+            <button class="btn btn-warning btn-sm" onclick="setStatus('${item._id}','in_progress')">
+              <i data-lucide="play" width="12" height="12"></i> เริ่ม
+            </button>` : ''}
+            ${item.status === 'in_progress' ? `
+            <button class="btn btn-success btn-sm" onclick="setStatus('${item._id}','done')">
+              <i data-lucide="check" width="12" height="12"></i> เสร็จ
+            </button>` : ''}
+            <button class="btn btn-danger btn-sm" onclick="del('${item._id}')">
+              <i data-lucide="trash-2" width="12" height="12"></i>
+            </button>
           </div>
         </div>
-        <div class="detail-box" id="qdet-${item._id}">
-          <div class="detail-row"><span class="detail-lbl">ฟีเจอร์</span><span class="detail-val" style="white-space:pre-wrap">${esc(item.features)}</span></div>
-          <div class="detail-row"><span class="detail-lbl">ติดต่อ</span><span class="detail-val">${esc(item.contactType)}: ${esc(item.contact)}</span></div>
-          ${item.budget ? `<div class="detail-row"><span class="detail-lbl">งบประมาณ</span><span class="detail-val">${esc(item.budget)}</span></div>` : ''}
-          ${item.deadline ? `<div class="detail-row"><span class="detail-lbl">กำหนดส่ง</span><span class="detail-val">${item.deadline}</span></div>` : ''}
-          ${item.notes ? `<div class="detail-row"><span class="detail-lbl">หมายเหตุ</span><span class="detail-val" style="white-space:pre-wrap">${esc(item.notes)}</span></div>` : ''}
+        <div class="q-detail" id="qd-${item._id}">
+          <table>
+            <tr><td>รายละเอียด</td><td style="white-space:pre-wrap">${esc(item.features)}</td></tr>
+            <tr><td>ติดต่อ</td><td>${esc(item.contactType)}: ${esc(item.contact)}</td></tr>
+            ${item.budget ? `<tr><td>งบ</td><td>${esc(item.budget)}</td></tr>` : ''}
+            ${item.deadline ? `<tr><td>กำหนดส่ง</td><td>${item.deadline}</td></tr>` : ''}
+            ${item.notes ? `<tr><td>หมายเหตุ</td><td style="white-space:pre-wrap">${esc(item.notes)}</td></tr>` : ''}
+          </table>
         </div>
       </div>
     `).join('');
-
-                initDragDrop();
-            } catch { loadEl.classList.add('hidden'); }
+                initDrag();
+                lucide.createIcons();
+            } catch { load.classList.add('hidden'); }
         }
 
-        async function updateStatus(id, status) {
+        async function setStatus(id, status) {
             try {
-                const res = await fetch(`/api/queue/${id}/status`, {
-                    method: 'PATCH', headers: authHeaders(),
-                    body: JSON.stringify({ status })
-                });
-                if (!res.ok) throw new Error();
-                toast(status === 'in_progress' ? '🔧 เริ่มทำงานแล้ว' : '✅ ทำเสร็จแล้ว', 'success');
+                const r = await fetch(`/api/queue/${id}/status`, { method: 'PATCH', headers: auth(), body: JSON.stringify({ status }) });
+                if (!r.ok) throw new Error();
+                toast(status === 'in_progress' ? 'เริ่มทำงานแล้ว' : 'ทำเสร็จแล้ว');
                 loadQueue(); loadStats();
-            } catch { toast('เกิดข้อผิดพลาด', 'error'); }
+            } catch { toast('เกิดข้อผิดพลาด', false); }
         }
 
-        async function deleteItem(id) {
-            if (!confirm('ลบรายการนี้ออกจากคิว?')) return;
+        async function del(id) {
+            if (!confirm('ลบออกจากคิว?')) return;
             try {
-                const res = await fetch(`/api/queue/${id}`, { method: 'DELETE', headers: authHeaders() });
-                if (!res.ok) throw new Error();
-                toast('ลบสำเร็จ', 'info');
+                const r = await fetch(`/api/queue/${id}`, { method: 'DELETE', headers: auth() });
+                if (!r.ok) throw new Error();
+                toast('ลบแล้ว');
                 loadQueue(); loadStats();
-            } catch { toast('เกิดข้อผิดพลาด', 'error'); }
+            } catch { toast('เกิดข้อผิดพลาด', false); }
         }
 
-        // ══ DONE TAB ═══════════════════════════════════════════
+        // ── DONE ────────────────────────────────────────────
         async function loadDone() {
-            const loadEl = document.getElementById('doneLoading');
-            const emptyEl = document.getElementById('doneEmpty');
-            const listEl = document.getElementById('doneList');
-            loadEl.classList.remove('hidden'); emptyEl.classList.add('hidden'); listEl.innerHTML = '';
+            const load = document.getElementById('dLoad');
+            const empty = document.getElementById('dEmpty');
+            const list = document.getElementById('dList');
+            load.classList.remove('hidden'); empty.classList.add('hidden'); list.innerHTML = '';
 
             try {
-                const res = await fetch('/api/queue', { headers: authHeaders() });
-                const data = await res.json();
-                loadEl.classList.add('hidden');
+                const r = await fetch('/api/queue', { headers: auth() });
+                const data = await r.json();
+                load.classList.add('hidden');
                 const done = data.filter(d => d.status === 'done');
-                if (!done.length) { emptyEl.classList.remove('hidden'); return; }
+                if (!done.length) { empty.classList.remove('hidden'); lucide.createIcons(); return; }
 
-                listEl.innerHTML = done.map(item => `
-      <div class="pending-item" style="opacity:0.75">
-        <div class="item-top">
-          <div class="item-top-left">
-            <div>
-              <div class="item-title">✅ ${esc(item.projectName)}</div>
-              <div class="item-chips">
-                <span class="chip">🔧 ${esc(item.boardType)}</span>
-                <span class="chip" style="color:var(--text-muted)">📅 ${relTime(item.updatedAt)}</span>
-              </div>
+                list.innerHTML = done.map(item => `
+      <div class="q-item" style="opacity:0.7">
+        <div class="q-top">
+          <div style="flex:1;min-width:0">
+            <div class="q-name">${esc(item.projectName)}</div>
+            <div class="q-meta">
+              <span><i data-lucide="cpu" width="11" height="11"></i>${esc(item.boardType)}</span>
+              <span class="badge b-done"><i data-lucide="check" width="10" height="10"></i> เสร็จ</span>
+              <span><i data-lucide="clock" width="11" height="11"></i>${relTime(item.updatedAt)}</span>
             </div>
           </div>
-          <button class="btn btn-danger btn-sm" onclick="deleteItem('${item._id}')">🗑 ลบ</button>
+          <button class="btn btn-danger btn-sm" onclick="del('${item._id}')">
+            <i data-lucide="trash-2" width="12" height="12"></i>
+          </button>
         </div>
       </div>
     `).join('');
-            } catch { loadEl.classList.add('hidden'); }
+                lucide.createIcons();
+            } catch { load.classList.add('hidden'); }
         }
 
-        // ══ DRAG & DROP ════════════════════════════════════════
-        function initDragDrop() {
-            const items = document.querySelectorAll('.queue-item-admin');
-            items.forEach(el => {
+        // ── DRAG & DROP ─────────────────────────────────────
+        function initDrag() {
+            document.querySelectorAll('#qList .q-item').forEach(el => {
                 el.addEventListener('dragstart', e => { dragSrc = el; el.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
-                el.addEventListener('dragend', () => { el.classList.remove('dragging'); document.querySelectorAll('.queue-item-admin').forEach(i => i.classList.remove('drag-over')); saveOrder(); });
-                el.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+                el.addEventListener('dragend', () => { el.classList.remove('dragging'); document.querySelectorAll('#qList .q-item').forEach(i => i.classList.remove('drag-over')); saveOrder(); });
+                el.addEventListener('dragover', e => { e.preventDefault(); });
                 el.addEventListener('dragenter', e => { e.preventDefault(); if (el !== dragSrc) el.classList.add('drag-over'); });
                 el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
                 el.addEventListener('drop', e => {
                     e.preventDefault();
                     if (dragSrc && dragSrc !== el) {
-                        const list = document.getElementById('queueList');
-                        const nodes = [...list.children];
-                        const srcIdx = nodes.indexOf(dragSrc);
-                        const tgtIdx = nodes.indexOf(el);
-                        if (srcIdx < tgtIdx) list.insertBefore(dragSrc, el.nextSibling);
-                        else list.insertBefore(dragSrc, el);
-                        // update position badges
-                        [...list.children].forEach((child, i) => {
-                            const badge = child.querySelector('.pos-badge');
-                            if (badge) badge.textContent = i + 1;
+                        const p = el.parentNode;
+                        const nodes = [...p.children];
+                        const si = nodes.indexOf(dragSrc);
+                        const ti = nodes.indexOf(el);
+                        if (si < ti) p.insertBefore(dragSrc, el.nextSibling);
+                        else p.insertBefore(dragSrc, el);
+                        [...p.children].forEach((c, i) => {
+                            const n = c.querySelector('.q-num');
+                            if (n) n.textContent = i + 1;
                         });
                     }
                     el.classList.remove('drag-over');
@@ -583,91 +459,93 @@
         }
 
         async function saveOrder() {
-            const items = document.querySelectorAll('.queue-item-admin');
+            const items = document.querySelectorAll('#qList .q-item');
             const order = [...items].map((el, i) => ({ id: el.dataset.id, position: i + 1 }));
             try {
-                await fetch('/api/queue/reorder', {
-                    method: 'PATCH', headers: authHeaders(),
-                    body: JSON.stringify({ order })
-                });
+                await fetch('/api/queue/reorder', { method: 'PATCH', headers: auth(), body: JSON.stringify({ order }) });
             } catch { }
         }
 
-        // ══ ADD FORM ═══════════════════════════════════════════
+        // ── ADD FORM ────────────────────────────────────────
         document.getElementById('addForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const errorEl = document.getElementById('addError');
-            errorEl.classList.add('hidden');
+            const errEl = document.getElementById('addErr');
+            const errTxt = document.getElementById('addErrTxt');
+            errEl.classList.add('hidden');
 
-            const projectName = document.getElementById('add-projectName').value.trim();
-            const features = document.getElementById('add-features').value.trim();
-            const contact = document.getElementById('add-contact').value.trim();
+            const projectName = document.getElementById('a-name').value.trim();
+            const features = document.getElementById('a-feat').value.trim();
+            const contact = document.getElementById('a-con').value.trim();
 
             if (!projectName || !features || !contact) {
-                errorEl.textContent = '⚠️ กรุณากรอกข้อมูลที่จำเป็น';
-                errorEl.classList.remove('hidden');
+                errTxt.textContent = 'กรุณากรอกข้อมูลที่มีดาวให้ครบ';
+                errEl.classList.remove('hidden');
                 return;
             }
 
-            const addBtn = document.getElementById('addBtn');
-            const addText = document.getElementById('addText');
-            const addSpinner = document.getElementById('addSpinner');
-            addBtn.disabled = true; addText.textContent = 'กำลังเพิ่ม...'; addSpinner.classList.remove('hidden');
+            const btn = document.getElementById('addBtn');
+            const txt = document.getElementById('addTxt');
+            const icon = document.getElementById('addIcon');
+            const spin = document.getElementById('addSpin');
+            btn.disabled = true; txt.textContent = 'กำลังเพิ่ม...'; icon.classList.add('hidden'); spin.classList.remove('hidden');
 
             try {
-                const res = await fetch('/api/queue/admin', {
-                    method: 'POST', headers: authHeaders(),
+                const r = await fetch('/api/queue/admin', {
+                    method: 'POST', headers: auth(),
                     body: JSON.stringify({
                         projectName, features, contact,
-                        boardType: document.getElementById('add-boardType').value,
-                        contactType: document.getElementById('add-contactType').value,
-                        budget: document.getElementById('add-budget').value.trim(),
-                        deadline: document.getElementById('add-deadline').value,
-                        notes: document.getElementById('add-notes').value.trim(),
+                        boardType: document.getElementById('a-board').value,
+                        contactType: document.getElementById('a-ctype').value,
+                        budget: document.getElementById('a-budget').value.trim(),
+                        deadline: document.getElementById('a-dead').value,
+                        notes: document.getElementById('a-notes').value.trim(),
                     })
                 });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.message);
+                const data = await r.json();
+                if (!r.ok) throw new Error(data.message);
                 document.getElementById('addForm').reset();
-                toast('เพิ่มเข้าคิวสำเร็จ!', 'success');
+                toast('เพิ่มเข้าคิวแล้ว');
                 loadStats();
             } catch (err) {
-                errorEl.textContent = '❌ ' + err.message;
-                errorEl.classList.remove('hidden');
+                errTxt.textContent = err.message;
+                errEl.classList.remove('hidden');
             } finally {
-                addBtn.disabled = false; addText.textContent = '➕ เพิ่มเข้าคิว'; addSpinner.classList.add('hidden');
+                btn.disabled = false; txt.textContent = 'เพิ่มเข้าคิว'; icon.classList.remove('hidden'); spin.classList.add('hidden');
+                lucide.createIcons();
             }
         });
 
-        // ══ HELPERS ════════════════════════════════════════════
-        function toggleDetail(id) {
-            const el = document.getElementById(id);
-            if (el) el.classList.toggle('open');
+        // ── HELPERS ─────────────────────────────────────────
+        function toggleDet(id) {
+            document.getElementById(id)?.classList.toggle('open');
         }
         function esc(s) {
             return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
         function statusBadge(s) {
-            const map = { approved: '<span class="badge badge-approved">⏳ รอดำเนินการ</span>', in_progress: '<span class="badge badge-progress">🔧 กำลังทำ</span>', done: '<span class="badge badge-done">✅ เสร็จ</span>' };
-            return map[s] || s;
+            const m = {
+                approved: 'b-approved',
+                in_progress: 'b-progress',
+                done: 'b-done',
+            };
+            const labels = { approved: 'รอดำเนินการ', in_progress: 'กำลังทำ', done: 'เสร็จ' };
+            return `<span class="badge ${m[s] || 'b-pending'}">${labels[s] || s}</span>`;
         }
-        function contactIcon(t) {
-            return { Line: '💬', Facebook: '👤', Phone: '📱', Email: '📧' }[t] || '📞';
-        }
-        function relTime(dateStr) {
-            const diff = Date.now() - new Date(dateStr);
-            const mins = Math.floor(diff / 60000);
-            if (mins < 1) return 'เมื่อกี้';
-            if (mins < 60) return `${mins} นาทีที่แล้ว`;
-            const hrs = Math.floor(mins / 60);
-            if (hrs < 24) return `${hrs} ชม.ที่แล้ว`;
-            return `${Math.floor(hrs / 24)} วันที่แล้ว`;
+        function relTime(d) {
+            const diff = Date.now() - new Date(d);
+            const m = Math.floor(diff / 60000);
+            if (m < 1) return 'เมื่อกี้';
+            if (m < 60) return `${m}น. ที่แล้ว`;
+            const h = Math.floor(m / 60);
+            if (h < 24) return `${h}ชม. ที่แล้ว`;
+            return `${Math.floor(h / 24)}วัน ที่แล้ว`;
         }
 
-        // ══ INIT ═══════════════════════════════════════════════
+        // ── INIT ────────────────────────────────────────────
         loadStats();
         loadPending();
-        setInterval(loadStats, 30000); // refresh stats every 30s
+        setInterval(loadStats, 30000);
+        lucide.createIcons();
     </script>
 </body>
 
