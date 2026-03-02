@@ -9,7 +9,7 @@ const authMiddleware = require('../middleware/auth');
 router.get('/public', async (req, res) => {
     try {
         const items = await QueueItem.find({
-            status: { $in: ['approved', 'waiting_parts', 'in_progress', 'done'] }
+            status: { $in: ['approved', 'waiting_parts', 'hardware_issue', 'in_progress', 'done'] }
         })
             .sort({ position: 1, createdAt: 1 })
             .select('projectName boardType status position createdAt');
@@ -58,7 +58,7 @@ router.post('/', async (req, res) => {
 router.get('/', authMiddleware, async (req, res) => {
     try {
         const items = await QueueItem.find({
-            status: { $in: ['approved', 'waiting_parts', 'in_progress', 'done'] }
+            status: { $in: ['approved', 'waiting_parts', 'hardware_issue', 'in_progress', 'done'] }
         }).sort({ position: 1, createdAt: 1 });
         res.json(items);
     } catch (err) {
@@ -183,7 +183,7 @@ router.patch('/:id/reject', authMiddleware, async (req, res) => {
 router.patch('/:id/status', authMiddleware, async (req, res) => {
     try {
         const { status } = req.body;
-        const validStatuses = ['approved', 'waiting_parts', 'in_progress', 'done'];
+        const validStatuses = ['approved', 'waiting_parts', 'hardware_issue', 'in_progress', 'done'];
         if (!validStatuses.includes(status)) {
             return res.status(400).json({ message: 'Invalid status.' });
         }

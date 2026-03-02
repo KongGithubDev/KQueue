@@ -343,6 +343,12 @@ select option {
   border-color: #22c55e25;
 }
 
+.b-error {
+  background: #ef444415;
+  color: var(--red);
+  border-color: #ef444425;
+}
+
 .b-rejected {
   background: #ef444415;
   color: var(--red);

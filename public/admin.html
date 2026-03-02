@@ -387,11 +387,15 @@
             <button class="btn btn-ghost btn-sm" onclick="toggleDet('qd-${item._id}')">
               <i data-lucide="eye" width="12" height="12"></i>
             </button>
-            ${item.status === 'approved' || item.status === 'in_progress' ? `
+            ${item.status === 'approved' || item.status === 'in_progress' || item.status === 'waiting_parts' ? `
             <button class="btn btn-warning btn-sm" onclick="setStatus('${item._id}','waiting_parts')">
               <i data-lucide="package" width="12" height="12"></i> รออุปกรณ์
             </button>` : ''}
-            ${item.status === 'approved' || item.status === 'waiting_parts' ? `
+            ${item.status === 'approved' || item.status === 'in_progress' || item.status === 'waiting_parts' ? `
+            <button class="btn btn-danger btn-sm" onclick="setStatus('${item._id}','hardware_issue')" title="ปัญหาอุปกรณ์">
+              <i data-lucide="alert-triangle" width="12" height="12"></i> ปัญหาอุปกรณ์
+            </button>` : ''}
+            ${item.status === 'approved' || item.status === 'waiting_parts' || item.status === 'hardware_issue' ? `
             <button class="btn btn-primary btn-sm" onclick="setStatus('${item._id}','in_progress')">
               <i data-lucide="play" width="12" height="12"></i> เริ่ม
             </button>` : ''}
@@ -426,7 +430,12 @@
             try {
                 const r = await fetch(`/api/queue/${id}/status`, { method: 'PATCH', headers: auth(), body: JSON.stringify({ status }) });
                 if (!r.ok) throw new Error();
-                const labels = { waiting_parts: 'ตั้งสถานะเป็นรออุปกรณ์', in_progress: 'เริ่มทำงานแล้ว', done: 'ทำเสร็จแล้ว' };
+                const labels = {
+                    waiting_parts: 'ตั้งสถานะเป็นรออุปกรณ์',
+                    hardware_issue: 'บันทึกปัญหาอุปกรณ์แล้ว',
+                    in_progress: 'เริ่มทำงานแล้ว',
+                    done: 'ทำเสร็จแล้ว'
+                };
                 toast(labels[status] || 'อัปเดตแล้ว');
                 loadQueue(); loadStats();
             } catch { toast('เกิดข้อผิดพลาด', false); }
@@ -607,12 +616,14 @@
             const m = {
                 approved: 'b-approved',
                 waiting_parts: 'b-warning',
+                hardware_issue: 'b-error',
                 in_progress: 'b-progress',
                 done: 'b-done',
             };
             const labels = {
                 approved: 'รอดำเนินการ',
                 waiting_parts: 'รออุปกรณ์',
+                hardware_issue: 'ปัญหาอุปกรณ์',
                 in_progress: 'กำลังทำ',
                 done: 'เสร็จ',
             };
