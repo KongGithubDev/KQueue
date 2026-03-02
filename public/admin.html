@@ -387,11 +387,7 @@
             <button class="btn btn-ghost btn-sm" onclick="toggleDet('qd-${item._id}')">
               <i data-lucide="eye" width="12" height="12"></i>
             </button>
-            ${item.status === 'approved' ? `
-            <button class="btn btn-warning btn-sm" onclick="setStatus('${item._id}','waiting_parts')">
-              <i data-lucide="package" width="12" height="12"></i> รออุปกรณ์
-            </button>` : ''}
-            ${item.status === 'in_progress' ? `
+            ${item.status === 'approved' || item.status === 'in_progress' ? `
             <button class="btn btn-warning btn-sm" onclick="setStatus('${item._id}','waiting_parts')">
               <i data-lucide="package" width="12" height="12"></i> รออุปกรณ์
             </button>` : ''}
