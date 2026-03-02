@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Login — KQueue</title>
+    <link rel="stylesheet" href="/style.css" />
+</head>
+
+<body>
+    <div class="login-wrapper">
+        <div class="login-card">
+            <div class="login-logo">
+                <div class="logo-icon">⚡</div>
+                <h2>KQueue</h2>
+                <p style="font-size:0.85rem;margin-top:0.3rem">Admin เท่านั้น</p>
+            </div>
+
+            <form id="loginForm" novalidate>
+                <div class="form-group">
+                    <label class="form-label" for="password">รหัสผ่าน</label>
+                    <input id="password" class="form-control" type="password" placeholder="••••••••" autofocus />
+                </div>
+                <div id="loginError" class="hidden"
+                    style="color:var(--accent-red);font-size:0.85rem;margin-bottom:0.8rem;text-align:center"></div>
+                <button type="submit" class="btn btn-primary btn-full btn-lg" id="loginBtn">
+                    <span id="loginText">เข้าสู่ระบบ</span>
+                    <span id="loginSpinner" class="spinner hidden"></span>
+                </button>
+            </form>
+
+            <div style="text-align:center;margin-top:1.25rem">
+                <a href="/" class="navbar-link" style="font-size:0.82rem">← กลับหน้าหลัก</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Redirect if already logged in
+        if (localStorage.getItem('adminToken')) {
+            window.location.href = '/admin';
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errorEl = document.getElementById('loginError');
+            const loginBtn = document.getElementById('loginBtn');
+            const loginText = document.getElementById('loginText');
+            const loginSpinner = document.getElementById('loginSpinner');
+
+            errorEl.classList.add('hidden');
+            loginBtn.disabled = true;
+            loginText.textContent = 'กำลังเข้าสู่ระบบ...';
+            loginSpinner.classList.remove('hidden');
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: document.getElementById('password').value })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'รหัสผ่านไม่ถูกต้อง');
+                localStorage.setItem('adminToken', data.token);
+                window.location.href = '/admin';
+            } catch (err) {
+                errorEl.textContent = '❌ ' + err.message;
+                errorEl.classList.remove('hidden');
+                loginBtn.disabled = false;
+                loginText.textContent = 'เข้าสู่ระบบ';
+                loginSpinner.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+
+</html>

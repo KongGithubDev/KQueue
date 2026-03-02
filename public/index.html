@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KQueue — ระบบจองคิวโครงงาน ESP32 / Arduino</title>
+    <meta name="description" content="ส่งคำขอโครงงาน ESP32, Arduino, Raspberry Pi รอระบบอนุมัติคิวให้เองเลย" />
+    <link rel="stylesheet" href="/style.css" />
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <div class="brand-icon">⚡</div>
+            <span>KQueue</span>
+        </div>
+        <a href="/login" class="navbar-link">Admin →</a>
+    </nav>
+
+    <main class="container">
+        <!-- HERO -->
+        <section class="hero">
+            <div class="hero-badge">⚡ ESP32 · Arduino · Raspberry Pi</div>
+            <h1><span class="gradient-text">KQueue</span><br />จองคิวทำโครงงาน</h1>
+            <p>แค่กรอกรายละเอียดให้ครบ แล้วรอผมอนุมัติได้เลย<br />ไม่ต้องทักหาก่อนก็ได้</p>
+        </section>
+
+        <!-- SUBMISSION FORM -->
+        <div class="card" id="formSection">
+            <div class="card-header">
+                <div class="card-title">📋 กรอกข้อมูลโครงงาน</div>
+            </div>
+
+            <form id="queueForm" novalidate>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="projectName">ชื่อโครงงาน<span class="required">*</span></label>
+                        <input id="projectName" class="form-control" type="text"
+                            placeholder="เช่น Smart Home, ระบบล็อคประตู" required />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="boardType">ประเภทบอร์ด</label>
+                        <select id="boardType" class="form-control">
+                            <option value="ESP32">ESP32</option>
+                            <option value="ESP8266">ESP8266</option>
+                            <option value="Arduino">Arduino (Uno/Nano/Mega)</option>
+                            <option value="Raspberry Pi">Raspberry Pi</option>
+                            <option value="Other">อื่นๆ</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="features">รายละเอียดฟีเจอร์<span class="required">*</span></label>
+                    <textarea id="features" class="form-control" rows="4"
+                        placeholder="อธิบายว่าต้องการให้ระบบทำอะไร เช่น ตัวไหนต่อกับอะไร, ส่งข้อมูลไปไหน, แสดงผลยังไง"
+                        required></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="contactType">ช่องทางการติดต่อ</label>
+                        <select id="contactType" class="form-control">
+                            <option value="Line">Line</option>
+                            <option value="Facebook">Facebook</option>
+                            <option value="Phone">โทรศัพท์</option>
+                            <option value="Email">Email</option>
+                            <option value="Other">อื่นๆ</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="contact">ID / เบอร์ / อีเมล<span
+                                class="required">*</span></label>
+                        <input id="contact" class="form-control" type="text" placeholder="Line ID, เบอร์โทร หรืออีเมล"
+                            required />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="budget">งบประมาณโดยประมาณ</label>
+                        <input id="budget" class="form-control" type="text"
+                            placeholder="เช่น 300-500 บาท หรือต่อรองได้" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="deadline">กำหนดส่ง (ถ้ามี)</label>
+                        <input id="deadline" class="form-control" type="date" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="notes">หมายเหตุเพิ่มเติม</label>
+                    <textarea id="notes" class="form-control" rows="2"
+                        placeholder="อะไรก็ได้ที่อยากบอกเพิ่มเติม เช่น มีอุปกรณ์อยู่แล้ว, มีตัวอย่างอยู่แล้ว"></textarea>
+                </div>
+
+                <div id="formError" class="hidden"
+                    style="color:var(--accent-red);font-size:0.85rem;margin-bottom:0.8rem;"></div>
+
+                <button type="submit" class="btn btn-primary btn-lg btn-full" id="submitBtn">
+                    <span id="submitText">📨 ส่งคำขอ</span>
+                    <span id="submitSpinner" class="spinner hidden"></span>
+                </button>
+            </form>
+        </div>
+
+        <!-- SUCCESS -->
+        <div class="card hidden" id="successSection">
+            <div class="success-screen">
+                <div class="success-icon">✅</div>
+                <h2>รับแล้ว!</h2>
+                <p style="margin-top:0.5rem">ได้รับคำขอของคุณแล้ว
+                    ผมจะดูและอนุมัติเร็วที่สุดนะ<br />กดดูสถานะคิวได้เลยด้านล่าง</p>
+                <button class="btn btn-ghost mt-3" onclick="resetForm()">📋 ส่งอีกอัน</button>
+            </div>
+        </div>
+
+        <!-- PUBLIC QUEUE VIEW -->
+        <section class="section">
+            <div class="card-header" style="margin-bottom:1rem">
+                <h2>📊 คิวตอนนี้</h2>
+                <button class="btn btn-ghost btn-sm" onclick="loadPublicQueue()">🔄 รีเฟรช</button>
+            </div>
+
+            <div class="card" style="padding:0; overflow:hidden;">
+                <div id="publicQueueLoading" class="flex-center" style="padding:2rem">
+                    <div class="spinner"
+                        style="border-color:rgba(124,77,255,0.2); border-top-color:var(--accent-purple)"></div>
+                </div>
+                <div id="publicQueueEmpty" class="empty-state hidden">
+                    <div class="empty-icon">🎯</div>
+                    <p>ว่างอยู่นะ จองได้เลย</p>
+                </div>
+                <table class="queue-table" id="publicQueueTable" style="display:none">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>ชื่อโครงงาน</th>
+                            <th>บอร์ด</th>
+                            <th>สถานะ</th>
+                            <th>วันที่ยื่น</th>
+                        </tr>
+                    </thead>
+                    <tbody id="publicQueueBody"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        const API = '/api';
+
+        // ── FORM SUBMIT ─────────────────────────────────────────────────
+        document.getElementById('queueForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errorEl = document.getElementById('formError');
+            errorEl.classList.add('hidden');
+
+            const projectName = document.getElementById('projectName').value.trim();
+            const features = document.getElementById('features').value.trim();
+            const contact = document.getElementById('contact').value.trim();
+
+            if (!projectName || !features || !contact) {
+                errorEl.textContent = '⚠️ กรุณากรอกข้อมูลที่จำเป็นให้ครบ (ชื่อโครงงาน, รายละเอียด, ช่องทางติดต่อ)';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            const submitText = document.getElementById('submitText');
+            const submitSpinner = document.getElementById('submitSpinner');
+            submitBtn.disabled = true;
+            submitText.textContent = 'กำลังส่ง...';
+            submitSpinner.classList.remove('hidden');
+
+            try {
+                const res = await fetch(`${API}/queue`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        projectName,
+                        features,
+                        contact,
+                        boardType: document.getElementById('boardType').value,
+                        contactType: document.getElementById('contactType').value,
+                        budget: document.getElementById('budget').value.trim(),
+                        deadline: document.getElementById('deadline').value,
+                        notes: document.getElementById('notes').value.trim(),
+                    })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'เกิดข้อผิดพลาด');
+
+                document.getElementById('formSection').classList.add('hidden');
+                document.getElementById('successSection').classList.remove('hidden');
+                loadPublicQueue();
+            } catch (err) {
+                errorEl.textContent = '❌ ' + err.message;
+                errorEl.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+                submitText.textContent = '📨 ส่งคำขอ';
+                submitSpinner.classList.add('hidden');
+            }
+        });
+
+        function resetForm() {
+            document.getElementById('queueForm').reset();
+            document.getElementById('formSection').classList.remove('hidden');
+            document.getElementById('successSection').classList.add('hidden');
+        }
+
+        // ── PUBLIC QUEUE ─────────────────────────────────────────────────
+        async function loadPublicQueue() {
+            const loadEl = document.getElementById('publicQueueLoading');
+            const emptyEl = document.getElementById('publicQueueEmpty');
+            const tableEl = document.getElementById('publicQueueTable');
+            const body = document.getElementById('publicQueueBody');
+
+            loadEl.classList.remove('hidden');
+            emptyEl.classList.add('hidden');
+            tableEl.style.display = 'none';
+
+            try {
+                const res = await fetch(`${API}/queue/public`);
+                const data = await res.json();
+                loadEl.classList.add('hidden');
+
+                if (!data.length) { emptyEl.classList.remove('hidden'); return; }
+
+                tableEl.style.display = 'table';
+                body.innerHTML = data.map((item, i) => `
+      <tr>
+        <td><div class="pos-badge">${i + 1}</div></td>
+        <td><strong>${esc(item.projectName)}</strong></td>
+        <td>${esc(item.boardType)}</td>
+        <td>${statusBadge(item.status)}</td>
+        <td style="color:var(--text-muted)">${new Date(item.createdAt).toLocaleDateString('th-TH')}</td>
+      </tr>
+    `).join('');
+            } catch {
+                loadEl.classList.add('hidden');
+                emptyEl.classList.remove('hidden');
+            }
+        }
+
+        function statusBadge(s) {
+            const map = {
+                approved: ['badge-approved', '⏳ รอดำเนินการ'],
+                in_progress: ['badge-progress', '🔧 กำลังทำ'],
+                done: ['badge-done', '✅ เสร็จแล้ว'],
+            };
+            const [cls, label] = map[s] || ['badge-pending', s];
+            return `<span class="badge ${cls}">${label}</span>`;
+        }
+
+        function esc(s) {
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        loadPublicQueue();
+    </script>
+</body>
+
+</html>

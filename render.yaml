@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: kqueue
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: MONGODB_URI
+        value: mongodb+srv://kongwatcharapongemail_db_user:KongPassword@kongdb.7f3tqb3.mongodb.net/kqueue
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        value: admin123
+      - key: NODE_ENV
+        value: production
