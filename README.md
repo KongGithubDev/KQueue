@@ -1,20 +1,18 @@
 # KQueue
 
-A simple queue system I built to manage project requests — mainly ESP32, Arduino, and Raspberry Pi stuff that people DM me about.
+A simple queue system I built to manage project requests — mainly ESP32, Arduino, and Raspberry Pi stuff that people ask me to build.
 
-The problem was I kept forgetting who asked first, losing track of what needs to be done, and spending too much time going back and forth with clients before even starting. This fixes that.
+The problem was I kept forgetting who asked first and losing track of what's in progress. This fixes that.
 
 ## How it works
 
-People fill out a form describing what they want built. I get a notification, check it out, and either approve or reject it. Approved requests go into the queue in order. I drag them around to reprioritize, mark them in-progress when I start, and done when I finish.
-
-That's it.
+People fill out a form describing what they want built. I get a notification, review it, and either approve or reject it. Approved requests go into the queue. I can drag or use ↑↓ buttons to reprioritize, mark them in-progress when I start, and done when I finish. If parts are missing I can set it to "waiting for parts" and resume later.
 
 ## Pages
 
 | URL | Who's it for |
 |-----|--------------|
-| `/` | Anyone who wants to submit a project |
+| `/` | Anyone submitting a project |
 | `/login` | Me |
 | `/admin` | Me (after login) |
 
@@ -22,7 +20,7 @@ That's it.
 
 - **Backend** — Node.js + Express
 - **Database** — MongoDB Atlas (Mongoose)
-- **Auth** — JWT, 24h expiry
+- **Auth** — JWT, 24h expiry, rate-limited login (5 attempts / 15 min)
 - **Frontend** — Plain HTML/CSS/JS, no frameworks
 - **Icons** — Lucide
 - **Deploy** — Render.com
@@ -50,7 +48,7 @@ Open `http://localhost:3000`
 
 ## Deploy on Render
 
-The `render.yaml` is already set up. Just:
+The `render.yaml` is already configured. Steps:
 
 1. Push to GitHub
 2. Connect the repo on [render.com](https://render.com)
@@ -59,20 +57,31 @@ The `render.yaml` is already set up. Just:
 
 MongoDB Atlas → Network Access → allow `0.0.0.0/0` so Render can connect.
 
-## Form fields
+## Status flow
 
-Clients fill in:
-- Project name
-- Board type (ESP32, Arduino, etc.)
-- What they want it to do
-- Nickname + classroom (optional, useful for school projects)
-- Contact — Instagram, Line, etc.
-- Budget and deadline (optional)
-- Any extra notes
+```
+pending → approved → waiting_parts ⇄ in_progress → done
+                                                     ↓
+                                          (can revert back if needed)
+```
 
-## Notes
+## Features
 
-- The admin password is stored as plaintext in env. Good enough for personal use but don't reuse it elsewhere.
-- Login is rate-limited to 5 attempts per 15 minutes per IP.
-- JWT tokens expire after 24 hours.
-- Drag-and-drop reordering saves automatically.
+**Client side**
+- Submit project requests with name, board type, nickname, classroom, contact, budget, deadline, notes
+- View live queue status
+
+**Admin side**
+- Approve / reject incoming requests
+- Add projects directly (bypasses approval)
+- Reorder queue with ↑↓ buttons or drag-and-drop
+- Set status: approved → waiting parts → in progress → done (reversible)
+- Post announcements visible to everyone on the public page
+- Real-time stats: pending, in queue, in progress, done
+
+## Security notes
+
+- Admin password stored as plaintext in env — fine for personal use, don't reuse it elsewhere
+- Login rate-limited to 5 wrong attempts per 15 minutes per IP
+- JWT tokens expire after 24 hours
+- CORS locked to `DOMAIN` in production
