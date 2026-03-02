@@ -23,7 +23,7 @@ router.get('/public', async (req, res) => {
 // POST /api/queue — client submits a new request
 router.post('/', async (req, res) => {
     try {
-        const { projectName, boardType, features, contact, contactType, budget, deadline, notes } = req.body;
+        const { projectName, nickname, classroom, boardType, features, contact, contactType, budget, deadline, notes } = req.body;
 
         if (!projectName || !features || !contact) {
             return res.status(400).json({ message: 'projectName, features, and contact are required.' });
@@ -31,10 +31,12 @@ router.post('/', async (req, res) => {
 
         const item = new QueueItem({
             projectName,
+            nickname: nickname || '',
+            classroom: classroom || '',
             boardType: boardType || 'ESP32',
             features,
             contact,
-            contactType: contactType || 'Line',
+            contactType: contactType || 'Instagram',
             budget: budget || '',
             deadline: deadline || '',
             notes: notes || '',
@@ -92,23 +94,24 @@ router.get('/stats', authMiddleware, async (req, res) => {
 // POST /api/queue/admin — admin adds directly (approved)
 router.post('/admin', authMiddleware, async (req, res) => {
     try {
-        const { projectName, boardType, features, contact, contactType, budget, deadline, notes } = req.body;
+        const { projectName, nickname, classroom, boardType, features, contact, contactType, budget, deadline, notes } = req.body;
 
         if (!projectName || !features || !contact) {
             return res.status(400).json({ message: 'projectName, features, and contact are required.' });
         }
 
-        // Get next position
         const lastItem = await QueueItem.findOne({ status: { $in: ['approved', 'in_progress'] } })
             .sort({ position: -1 });
         const nextPosition = lastItem ? lastItem.position + 1 : 1;
 
         const item = new QueueItem({
             projectName,
+            nickname: nickname || '',
+            classroom: classroom || '',
             boardType: boardType || 'ESP32',
             features,
             contact,
-            contactType: contactType || 'Line',
+            contactType: contactType || 'Instagram',
             budget: budget || '',
             deadline: deadline || '',
             notes: notes || '',

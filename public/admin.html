@@ -13,7 +13,6 @@
 
     <nav class="topbar">
         <a class="logo" href="/">
-            <div class="logo-box"><i data-lucide="zap" width="14" height="14"></i></div>
             KQueue
         </a>
         <div style="display:flex;gap:8px;align-items:center">
@@ -134,6 +133,16 @@
                                 <option value="Raspberry Pi">Raspberry Pi</option>
                                 <option value="Other">อื่นๆ</option>
                             </select>
+                        </div>
+                    </div>
+                    <div class="row2">
+                        <div class="fg">
+                            <label>ชื่อเล่น</label>
+                            <input id="a-nick" type="text" placeholder="เช่น ก้อง, มิ้น" />
+                        </div>
+                        <div class="fg">
+                            <label>ห้องเรียน</label>
+                            <input id="a-class" type="text" placeholder="เช่น ม.5/2, ปวช.2/1" />
                         </div>
                     </div>
                     <div class="fg">
@@ -280,6 +289,8 @@
         <div class="q-detail" id="pd-${item._id}">
           <table>
             <tr><td>โครงงาน</td><td>${esc(item.projectName)}</td></tr>
+            ${item.nickname ? `<tr><td>ชื่อเล่น</td><td>${esc(item.nickname)}</td></tr>` : ''}
+            ${item.classroom ? `<tr><td>ห้อง</td><td>${esc(item.classroom)}</td></tr>` : ''}
             <tr><td>บอร์ด</td><td>${esc(item.boardType)}</td></tr>
             <tr><td>รายละเอียด</td><td style="white-space:pre-wrap">${esc(item.features)}</td></tr>
             <tr><td>ติดต่อ</td><td>${esc(item.contactType)}: ${esc(item.contact)}</td></tr>
@@ -363,6 +374,8 @@
         </div>
         <div class="q-detail" id="qd-${item._id}">
           <table>
+            ${item.nickname ? `<tr><td>ชื่อเล่น</td><td>${esc(item.nickname)}</td></tr>` : ''}
+            ${item.classroom ? `<tr><td>ห้อง</td><td>${esc(item.classroom)}</td></tr>` : ''}
             <tr><td>รายละเอียด</td><td style="white-space:pre-wrap">${esc(item.features)}</td></tr>
             <tr><td>ติดต่อ</td><td>${esc(item.contactType)}: ${esc(item.contact)}</td></tr>
             ${item.budget ? `<tr><td>งบ</td><td>${esc(item.budget)}</td></tr>` : ''}
@@ -494,6 +507,8 @@
                     method: 'POST', headers: auth(),
                     body: JSON.stringify({
                         projectName, features, contact,
+                        nickname: document.getElementById('a-nick').value.trim(),
+                        classroom: document.getElementById('a-class').value.trim(),
                         boardType: document.getElementById('a-board').value,
                         contactType: document.getElementById('a-ctype').value,
                         budget: document.getElementById('a-budget').value.trim(),

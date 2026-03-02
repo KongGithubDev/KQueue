@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const queueItemSchema = new mongoose.Schema({
     position: { type: Number, default: 0 },
     projectName: { type: String, required: true, trim: true },
+    nickname: { type: String, default: '', trim: true },
+    classroom: { type: String, default: '', trim: true },
     boardType: {
         type: String,
         enum: ['ESP32', 'ESP8266', 'Arduino', 'Raspberry Pi', 'Other'],

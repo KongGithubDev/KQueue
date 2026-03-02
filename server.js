@@ -6,9 +6,15 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const isProd = process.env.NODE_ENV === 'production';
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: isProd
+        ? (process.env.ALLOWED_ORIGIN || 'https://kqueue.kongwatcharapong.in.th')
+        : true,
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -33,7 +39,9 @@ mongoose.connect(process.env.MONGODB_URI)
         console.log('✅ Connected to MongoDB');
         app.listen(PORT, () => {
             console.log(`🚀 Server running on http://localhost:${PORT}`);
-            console.log(`🔑 Admin password: ${process.env.ADMIN_PASSWORD || 'admin123'}`);
+            if (!isProd) {
+                console.log(`🔑 Admin password: ${process.env.ADMIN_PASSWORD || 'admin123'}`);
+            }
         });
     })
     .catch(err => {

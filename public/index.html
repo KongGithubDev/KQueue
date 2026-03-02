@@ -14,7 +14,6 @@
 
     <nav class="topbar">
         <a class="logo" href="/">
-            <div class="logo-box"><i data-lucide="zap" width="14" height="14"></i></div>
             KQueue
         </a>
         <a href="/login" class="topbar-link">
@@ -52,6 +51,17 @@
                             <option value="Raspberry Pi">Raspberry Pi</option>
                             <option value="Other">อื่นๆ / ยังไม่แน่ใจ</option>
                         </select>
+                    </div>
+                </div>
+
+                <div class="row2">
+                    <div class="fg">
+                        <label>ชื่อเล่น</label>
+                        <input id="nickname" type="text" placeholder="เช่น ก้อง, มิ้น" />
+                    </div>
+                    <div class="fg">
+                        <label>ห้องเรียน</label>
+                        <input id="classroom" type="text" placeholder="เช่น ม.5/2, ปวช.2/1" />
                     </div>
                 </div>
 
@@ -194,6 +204,8 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         projectName, features, contact,
+                        nickname: document.getElementById('nickname').value.trim(),
+                        classroom: document.getElementById('classroom').value.trim(),
                         boardType: document.getElementById('boardType').value,
                         contactType: document.getElementById('contactType').value,
                         budget: document.getElementById('budget').value.trim(),

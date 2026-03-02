@@ -11,5 +11,7 @@ services:
         generateValue: true
       - key: ADMIN_PASSWORD
         value: admin123
+      - key: ALLOWED_ORIGIN
+        value: https://kqueue.kongwatcharapong.in.th
       - key: NODE_ENV
         value: production
